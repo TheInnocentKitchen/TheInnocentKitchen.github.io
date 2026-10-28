@@ -91,4 +91,6 @@ $('refreshPrep').addEventListener('click',async()=>{await loadOrders();renderPre
 $('resetPrepChecks').addEventListener('click',()=>{if(!confirm('Reset all packing checklist ticks on this device?'))return;prepChecks={};localStorage.setItem(PREP_CHECKS_KEY,JSON.stringify(prepChecks));renderPrep()});
 $('prepComponents').addEventListener('change',e=>{const el=e.target.closest('[data-prep-check]');if(!el)return;const key=el.dataset.prepCheck;prepChecks[key]=el.checked;localStorage.setItem(PREP_CHECKS_KEY,JSON.stringify(prepChecks));renderPrep()});
 start();
-</script></body></html>
+</script>
+<script src="./admin-availability.js"></script>
+</body></html>
