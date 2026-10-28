@@ -1,4 +1,4 @@
-const CACHE_NAME = "tik-packing-v8";
+const CACHE_NAME = "tik-packing-v9";
 
 const STATIC_FILES = [
   "./",
@@ -13,7 +13,8 @@ const STATIC_FILES = [
   "./daily-menu-admin.js",
   "./daily-menu-customer.js",
   "./delivery-slots-admin.js",
-  "./delivery-slots-customer.js"
+  "./delivery-slots-customer.js",
+  "./slot-production-board.js"
 ];
 
 const STATIC_PATHS = new Set(
