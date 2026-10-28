@@ -1,0 +1,11 @@
+{
+  "name": "The Innocent Kitchen Packing Desk",
+  "short_name": "IK Packing",
+  "description": "Offline order aggregation and packing checklist",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f4ed",
+  "theme_color": "#173f35",
+  "icons": []
+}
