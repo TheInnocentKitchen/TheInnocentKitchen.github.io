@@ -1,4 +1,4 @@
-const CACHE_NAME = "tik-packing-v3";
+const CACHE_NAME = "tik-packing-v4";
 
 const STATIC_FILES = [
   "./",
@@ -11,9 +11,7 @@ const STATIC_FILES = [
 ];
 
 const STATIC_PATHS = new Set(
-  STATIC_FILES.map(
-    path => new URL(path, self.location.href).pathname
-  )
+  STATIC_FILES.map(path => new URL(path, self.location.href).pathname)
 );
 
 self.addEventListener("install", event => {
@@ -29,10 +27,7 @@ self.addEventListener("activate", event => {
     caches.keys()
       .then(keys => Promise.all(
         keys
-          .filter(key =>
-            key.startsWith("tik-packing-") &&
-            key !== CACHE_NAME
-          )
+          .filter(key => key.startsWith("tik-packing-") && key !== CACHE_NAME)
           .map(key => caches.delete(key))
       ))
       .then(() => self.clients.claim())
@@ -44,26 +39,19 @@ self.addEventListener("fetch", event => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
-  if (
-    url.origin !== self.location.origin ||
-    !STATIC_PATHS.has(url.pathname)
-  ) return;
+  if (url.origin !== self.location.origin || !STATIC_PATHS.has(url.pathname)) return;
 
   event.respondWith(
     fetch(request)
       .then(response => {
         if (response.ok) {
-          caches.open(CACHE_NAME)
-            .then(cache =>
-              cache.put(request, response.clone())
-            );
+          caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
         }
         return response;
       })
       .catch(async () => {
         const cache = await caches.open(CACHE_NAME);
-        const cached = await cache.match(request);
-        return cached || cache.match("./index.html");
+        return (await cache.match(request)) || (await cache.match("./index.html"));
       })
   );
 });
