@@ -1,4 +1,4 @@
-const CACHE_NAME = "tik-packing-v4";
+const CACHE_NAME = "tik-packing-v5";
 
 const STATIC_FILES = [
   "./",
