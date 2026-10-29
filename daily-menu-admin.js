@@ -37,7 +37,7 @@
     return `${p.year}-${p.month}-${p.day}`;
   }
   function getMenu() {
-    try { return Array.isArray(ORDER_MENU) ? ORDER_MENU : []; }
+    try { return Array.isArray(ORDER_MENU) ? ORDER_MENU.filter(item => item.isActive !== false) : []; }
     catch (_) { return []; }
   }
 
