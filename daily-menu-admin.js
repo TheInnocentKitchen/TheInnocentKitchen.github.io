@@ -105,7 +105,9 @@
     target.innerHTML = items.map(item => {
       const row = saved[item.sku] || {};
       const price = row.custom_price === null || row.custom_price === undefined ? '' : String(row.custom_price);
-      const base = BASE_PRICES[item.sku];
+      const base = Number.isFinite(Number(item.basePrice)) && item.basePrice != null
+  ? Number(item.basePrice)
+  : BASE_PRICES[item.sku];
       return `<div style="padding:11px 0;border-bottom:1px solid var(--line)">
         <div style="display:flex;align-items:center;gap:9px">
           <input type="checkbox" data-dm-include="${safeText(item.sku)}" ${row.is_included === true ? 'checked' : ''} style="width:20px;height:20px;flex:0 0 auto">
