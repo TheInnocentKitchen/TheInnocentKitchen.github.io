@@ -222,7 +222,9 @@
       publishButton.disabled = false;
     }
   }
-
+window.tikDailyMenuCatalogUpdated = function () {
+  if ($('tikDailyMenuPanel')) loadMenu();
+};
   function boot() {
     if (!ensurePanel()) return;
     loadMenu();
