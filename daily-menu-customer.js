@@ -1,11 +1,10 @@
-/* The Innocent Kitchen — show the published menu for today's date in Asia/Kolkata. */
+/* The Innocent Kitchen — published daily menu backed by the live Supabase catalogue. */
 (function () {
   'use strict';
 
   let baseMenu = null;
   let loading = false;
   let lastSignature = '';
-  let lastMenuDate = '';
 
   function getTodayIndia() {
     const parts = new Intl.DateTimeFormat('en-GB', {
@@ -43,12 +42,12 @@
         if (!nextIds.has(sku)) cart.delete(sku);
       }
     } catch (_) {}
+    // MENU is a constant array in order.html; mutate it in place so existing cart/render code keeps working.
     MENU.splice(0, MENU.length, ...menu.map(item => ({ ...item })));
     try { renderProducts(); } catch (_) {}
     try { renderCart(); } catch (_) {}
     const note = ensureNote();
     if (note) note.textContent = message;
-    // Ask the existing out-of-stock script to rerender against the newly applied daily SKU list.
     try { document.dispatchEvent(new Event('visibilitychange')); } catch (_) {}
   }
 
@@ -58,19 +57,37 @@
     if (note) note.style.color = '#8b3029';
   }
 
+  async function fetchLiveCatalogue(client) {
+    const { data, error } = await client.from('menu_catalog')
+      .select('sku,name,description,base_price,is_active')
+      .eq('is_active', true)
+      .order('name', { ascending: true });
+    if (error) throw error;
+    const rows = (data || []).map(row => ({
+      id: row.sku,
+      name: row.name,
+      description: row.description || '',
+      price: Number(row.base_price)
+    })).filter(row => row.id && row.name && Number.isFinite(row.price) && row.price > 0);
+    if (!rows.length) throw new Error('No active menu items are available in the catalogue. Please contact the kitchen.');
+    return rows;
+  }
+
   async function refreshDailyMenu() {
     if (loading) return;
     let client;
     try { client = customerSupabaseClient; } catch (_) { client = null; }
-    if (!client) return;
-    if (!Array.isArray(MENU)) return;
-    if (baseMenu === null) baseMenu = MENU.map(item => ({ ...item }));
+    let signedIn = false;
+    try { signedIn = !!(customerAuthSession && customerAuthSession.user); } catch (_) {}
+    if (!client || !signedIn || !Array.isArray(MENU)) return;
 
     loading = true;
     const date = getTodayIndia();
     const note = ensureNote();
     if (note && !lastSignature) note.textContent = 'Checking today’s menu…';
     try {
+      // Refresh the regular catalogue first so newly added/edited products appear without a code change.
+      baseMenu = await fetchLiveCatalogue(client);
       const dayResult = await client.from('daily_menu_days')
         .select('menu_date,title,note,is_published')
         .eq('menu_date', date).eq('is_published', true).maybeSingle();
@@ -78,8 +95,8 @@
       const day = dayResult.data;
 
       if (!day) {
-        lastMenuDate = date;
-        updateScreen(baseMenu, 'regular:' + date, 'Regular menu is active. Today’s daily menu has not been published yet.');
+        const regularSignature = 'regular:' + date + ':' + JSON.stringify(baseMenu.map(item => [item.id, item.name, item.description, item.price]));
+        updateScreen(baseMenu, regularSignature, 'Regular menu is active. Today’s daily menu has not been published yet.');
         const target = ensureNote();
         if (target) target.style.color = '';
         return;
@@ -95,19 +112,18 @@
         price: records[item.id].custom_price === null || records[item.id].custom_price === undefined
           ? item.price : Number(records[item.id].custom_price)
       }));
-      if (!menu.length) throw new Error('The published menu has no included items. Please contact the kitchen.');
+      if (!menu.length) throw new Error('The published menu has no active included items. Please contact the kitchen.');
 
       const signature = 'published:' + date + ':' + JSON.stringify({
-        title: day.title, note: day.note || '', items: menu.map(item => [item.id, item.price])
+        title: day.title, note: day.note || '', items: menu.map(item => [item.id, item.name, item.description, item.price])
       });
-      lastMenuDate = date;
       const parts = [day.title || 'Today’s Menu', menu.length + ' items'];
       if (day.note) parts.push(day.note);
       updateScreen(menu, signature, parts.join(' · '));
       const target = ensureNote();
       if (target) target.style.color = '';
     } catch (error) {
-      // Fail closed: do not let a customer order with stale prices if today's published menu could not be checked.
+      // Fail closed: never allow checkout against stale or unverifiable menu pricing.
       lockMenu('Could not verify today’s menu. Ordering is paused; refresh the page and try again. ' + (error.message || ''), 'error:' + date + ':' + String(error.message || 'unknown'));
     } finally {
       loading = false;
@@ -122,6 +138,15 @@
       if (document.visibilityState === 'visible') refreshDailyMenu();
     });
     window.addEventListener('focus', refreshDailyMenu);
+    try {
+      if (typeof customerSupabaseClient !== 'undefined' && customerSupabaseClient && customerSupabaseClient.auth) {
+        customerSupabaseClient.auth.onAuthStateChange((_event, authSession) => {
+          baseMenu = null;
+          lastSignature = '';
+          if (authSession) window.setTimeout(refreshDailyMenu, 0);
+        });
+      }
+    } catch (_) {}
   }
 
   window.tikDailyMenuRefresh = refreshDailyMenu;

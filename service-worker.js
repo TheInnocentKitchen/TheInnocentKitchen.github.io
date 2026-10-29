@@ -1,4 +1,4 @@
-const CACHE_NAME = "tik-packing-v9";
+const CACHE_NAME = "tik-packing-v10";
 
 const STATIC_FILES = [
   "./",
@@ -14,7 +14,9 @@ const STATIC_FILES = [
   "./daily-menu-customer.js",
   "./delivery-slots-admin.js",
   "./delivery-slots-customer.js",
-  "./slot-production-board.js"
+  "./slot-production-board.js",
+  "./menu-catalog-admin.js",
+  "./admin-sections.js"
 ];
 
 const STATIC_PATHS = new Set(
@@ -44,10 +46,8 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
-
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || !STATIC_PATHS.has(url.pathname)) return;
-
   event.respondWith(
     fetch(request)
       .then(response => {
