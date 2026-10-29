@@ -1,35 +1,30 @@
-# The Innocent Kitchen — Packing Desk v1
+# The Innocent Kitchen — Ordering & Kitchen Operations
 
-## What is included
-- `index.html`: local-first order entry, recipe database, consolidated packing list, checklist, CSV and JSON backup.
-- `manifest.webmanifest`: installable web-app metadata.
-- `service-worker.js`: caches the app shell for offline use after the first online visit.
+This repository powers the customer ordering and kitchen workflow pages hosted with GitHub Pages.
 
-## Important recipe note
-Starter recipes are editable examples:
-- Common thali base: basmati rice 200 g, dal 100 g, gravy 90 g, seasonal vegetable sabji 80 g, mint curd 1 portion, salad 1 portion.
-- Protein examples: chicken 150 g, fish 150 g, egg curry 2 eggs, matar paneer 120 g. Soya and legume protein portions are placeholders at 150 g.
-Confirm all portions and units against the current production SOP before relying on the output. The app sums recipes deterministically; it does not infer missing recipe data.
+## Live pages
+- Customer ordering: https://theinnocentkitchen.github.io/order.html
+- Kitchen dashboard: https://theinnocentkitchen.github.io/admin-v2.html
+- Original local-first Packing Desk: https://theinnocentkitchen.github.io/
 
-## Install on Android and use offline
-A Progressive Web App service worker requires a secure origin (HTTPS; localhost is an exception). To install:
-1. Upload these three files to any HTTPS static host.
-2. Open the app URL in Chrome on the Android phone while online.
-3. Choose Chrome menu > Install app or Add to Home screen.
-4. Open it once while online so the service worker caches the app shell.
-5. Test by turning on airplane mode and reopening the app.
+## Main files
+- `order.html`: customer sign-in, menu/cart, scheduled delivery slots, checkout, order history/tracking and UPI UTR reporting.
+- `admin-v2.html`: authenticated dashboard for orders, status/payment management, shared recipes and packing totals.
+- `admin-availability.js` / `customer-availability.js`: shared menu availability.
+- `daily-menu-admin.js` / `daily-menu-customer.js`: daily menu publishing and customer display.
+- `delivery-slots-admin.js` / `delivery-slots-customer.js`: delivery windows, capacity and cut-offs.
+- `slot-production-board.js`: slot-wise production, shared checklist, delay alerts and dispatch workflow.
+- `service-worker.js`: caches the installable site's static files.
+- `index.html`: separate local-first manual Packing Desk retained for offline use.
 
-The app stores data in the browser's local storage on that device. Export a JSON backup regularly. Browser storage can be cleared by the operating system or browser; this is not a cloud backup.
+## Backend
+The application uses Supabase project `demphpgcqtxapmqvlkdd`. The browser uses a publishable key only; never commit a service-role key. Database RLS and RPC validation enforce access and checkout checks.
 
-## Basic workflow
-1. On Orders, type a customer label, select an SKU, choose Rice/Roti/Paratha, and set quantity.
-2. Tap Add item for each SKU in that customer's order.
-3. Tap Save customer order.
-4. Open Packing list and tick each component when packed.
-5. Edit/add SKUs and exact recipe amounts in Recipes.
-6. Export JSON backups and CSV packing lists in Data & backup.
+## Operational notes
+- Test customer checkout, admin order transitions, menu publishing, slot capacity, shared recipe sync and checklist changes after deployments.
+- Recipe quantities must be verified against actual kitchen SOPs. The production board does not invent missing recipes or validate raw/cooked yields.
+- UTR submission is not payment verification; the kitchen must verify the transaction separately.
+- Orders require authenticated customers; token-protected tracking and UTR reporting use validated RPC functions.
 
-## Current v1 limitations
-- Manual entry only; no WhatsApp import, payment reconciliation, inventory depletion, or multi-device sync.
-- The meal selector swaps the standard 200 g rice component for 4 rotis or 3 parathas per thali. Confirm these portions against your current SOP. If a specific SKU uses different bread quantities, create a separate SKU recipe or adjust the app logic.
-- No login or cloud sync. Use only on the device where orders are entered.
+## Database changes and safety
+Read [Supabase maintenance notes](supabase/README.md) before modifying the database. The live database contains Phase 3–5 schema objects whose historical migration SQL is not yet fully captured. Do not reset or recreate production from the current migration folder until a complete baseline has been captured and reviewed.
