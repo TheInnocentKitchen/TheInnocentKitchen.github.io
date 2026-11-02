@@ -4,6 +4,7 @@
   const $ = id => document.getElementById(id);
   const sections = [
     { id: 'ordersPanel', label: 'Incoming orders' },
+    { id: 'tikWalletAdminPanel', label: 'Prepaid wallets' },
     { id: 'packingPrepPanel', label: 'Packing & recipes' },
     { id: 'tikMenuCatalogPanel', label: 'Menu catalogue' },
     { id: 'tikDailyMenuPanel', label: 'Daily menu' },
