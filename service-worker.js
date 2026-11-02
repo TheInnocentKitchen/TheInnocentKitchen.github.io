@@ -1,4 +1,4 @@
-const CACHE_NAME = "tik-packing-v12";
+const CACHE_NAME = "tik-packing-v13";
 
 const STATIC_FILES = [
   "./",
@@ -18,7 +18,9 @@ const STATIC_FILES = [
   "./menu-catalog-admin.js",
   "./admin-sections.js",
   "./customer-order-reviews.js",
-  "./customer-order-reviews-admin.js"
+  "./customer-order-reviews-admin.js",
+  "./wallet-customer.js",
+  "./wallet-admin.js"
 ];
 
 const STATIC_PATHS = new Set(
@@ -48,19 +50,25 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
+
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin || !STATIC_PATHS.has(url.pathname)) return;
+  if (url.origin !== self.location.origin ||
+      !STATIC_PATHS.has(url.pathname)) return;
+
   event.respondWith(
     fetch(request)
       .then(response => {
         if (response.ok) {
-          caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
+          caches.open(CACHE_NAME).then(cache =>
+            cache.put(request, response.clone())
+          );
         }
         return response;
       })
       .catch(async () => {
         const cache = await caches.open(CACHE_NAME);
-        return (await cache.match(request)) || (await cache.match("./index.html"));
+        return (await cache.match(request)) ||
+               (await cache.match("./index.html"));
       })
   );
 });
